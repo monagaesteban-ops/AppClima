@@ -1,11 +1,17 @@
-# AppClima
-Fundamentos del aprendizaje 
+# CURSO DE GIT Y GITHUB
 
-Aprendiendo a usar GitHub Desktop...
+*Fundamentos del aprendizaje 
+
+*Aprendiendo a usar GitHub Desktop...
 
 ## Curso de flujo de trabajo
 
--Primera linea 
+-Primera linea.
  
--Segunda linea
+-Segunda linea.
 
+## Segunda parte 
+
+-Primera linea.
+
+-Segunda linea.
