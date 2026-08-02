@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Snake</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#9a9c4e">
 </head>
 <body>
   <canvas id="canvas"></canvas>
@@ -12,5 +15,16 @@
   <script src="input.js"></script><!-- attaches keyboard + touch listeners -->
   <script src="game.js"></script> <!-- state, loop, boot -->
 
+  <script>
+    // Registra el service worker para que el juego quede cacheado
+    // y funcione sin conexión después de la primera carga.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('service-worker.js').catch(function(err) {
+          console.warn('No se pudo registrar el service worker:', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
