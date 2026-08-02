@@ -2,6 +2,21 @@
 // canvas is defined in render.js (loaded before this file)
 // dir, nextDir, phase, start are defined in game.js (loaded after this file)
 
+// ── Audio unlock ──────────────────────────────────────────────────────────
+// El audio (Web Audio API) requiere un gesto del usuario para poder sonar.
+// El primer gesto solo desbloquea el audio y pone la música de la pantalla
+// de inicio; no cuenta como "empezar" el juego. Desde el segundo gesto en
+// adelante, el input funciona como siempre.
+
+var audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  AudioManager.init();
+  if (phase !== 'running') AudioManager.playMenuMusic();
+}
+
 // ── Keyboard ──────────────────────────────────────────────────────────────
 
 var KEY_MAP = { 37: 'left', 38: 'up', 39: 'right', 40: 'down' };
@@ -10,6 +25,8 @@ document.addEventListener('keydown', function(e) {
   var action = KEY_MAP[e.keyCode];
   if (!action) return;
   e.preventDefault();
+
+  if (!audioUnlocked) { unlockAudio(); return; }
 
   if (phase !== 'running') { start(); return; }
 
@@ -37,6 +54,8 @@ canvas.addEventListener('touchend', function(e) {
   var dx = t.clientX - touchStart.x;
   var dy = t.clientY - touchStart.y;
   touchStart = null;
+
+  if (!audioUnlocked) { unlockAudio(); return; }
 
   if (phase !== 'running') { start(); return; }
 

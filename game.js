@@ -35,6 +35,7 @@ function start() {
   init();
   phase     = 'running';
   loopTimer = setInterval(tick, 1000 / FPS);
+  AudioManager.playGameMusic();
 }
 
 // ── Game loop ──────────────────────────────────────────────────────────────
@@ -49,6 +50,9 @@ function tick() {
     phase = 'dead';
     best  = Math.max(best, score);
     clearInterval(loopTimer);
+    AudioManager.playCollision();
+    setTimeout(function() { AudioManager.playGameOver(); }, 150);
+    setTimeout(function() { AudioManager.playMenuMusic(); }, 1400);
     draw();
     return;
   }
@@ -59,6 +63,7 @@ function tick() {
     score += foodIsSpecial ? SPECIAL_FOOD_VALUE : 1;
     foodsEaten++;
     placeFood();
+    AudioManager.playEat();
   } else {
     snake.pop();
   }
