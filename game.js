@@ -9,6 +9,7 @@ var CELL; // pixels per cell, computed in resize()
 // ── State ─────────────────────────────────────────────────────────────────
 
 var snake, dir, nextDir, food, foodIsSpecial, foodsEaten, score, best, phase, loopTimer;
+var gameOverTimers = [];
 // phase: 'idle' | 'running' | 'dead'
 // Every 10 foods eaten, the next food is a special one worth 5 points instead of 1.
 var SPECIAL_FOOD_EVERY = 10;
@@ -32,6 +33,8 @@ function placeFood() {
 
 function start() {
   if (loopTimer) clearInterval(loopTimer);
+  gameOverTimers.forEach(function(id) { clearTimeout(id); });
+  gameOverTimers = [];
   init();
   phase     = 'running';
   loopTimer = setInterval(tick, 1000 / FPS);
@@ -50,9 +53,9 @@ function tick() {
     phase = 'dead';
     best  = Math.max(best, score);
     clearInterval(loopTimer);
+    AudioManager.stopMusic();
     AudioManager.playCollision();
-    setTimeout(function() { AudioManager.playGameOver(); }, 150);
-    setTimeout(function() { AudioManager.playMenuMusic(); }, 1400);
+    gameOverTimers.push(setTimeout(function() { AudioManager.playGameOver(); }, 150));
     draw();
     return;
   }

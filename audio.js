@@ -113,18 +113,26 @@ var AudioManager = (function() {
     freqs.forEach(function(f) { pluckGuitar(destCtx, f, startTime, duration, volume); });
   }
 
-  // Pieza de 20s: acordes de guitarra sostenidos (re-pulsados a la mitad
-  // para que no se apaguen) como colchón de ambiente, y encima una
-  // melodía de violín propiamente dicha (ritmo variado, con silencios
-  // para que respire) — no una escala corrida, sino una frase musical.
-  function renderMelodyPiece(chords, melody, chordVol, melVol) {
+  // Bordón: nota(s) graves sostenidas durante toda la pieza, como el
+  // "drone" típico de la música medieval (quinta abierta sonando de
+  // fondo todo el tiempo, sin moverse).
+  function droneNotes(destCtx, freqs, duration, volume) {
+    freqs.forEach(function(f) { bowViolin(destCtx, f, 0, duration, volume); });
+  }
+
+  // Pieza de 20s: bordón grave sostenido de fondo + acordes de guitarra
+  // en quintas abiertas (armonía medieval, sin terceras) + melodía de
+  // violín en modo dórico, con silencios para que respire.
+  function renderMelodyPiece(chords, melody, chordVol, melVol, drone, droneVol) {
     var duration = 20;
     var offline = new OfflineAudioContext(1, Math.ceil(44100 * duration), 44100);
+
+    if (drone) droneNotes(offline, drone, duration, droneVol || 0.035);
 
     var t = 0;
     chords.forEach(function(chord) {
       chordPluck(offline, chord.freqs, t, chord.dur, chordVol);
-      chordPluck(offline, chord.freqs, t + chord.dur * 0.5, chord.dur * 0.5, chordVol * 0.65);
+      chordPluck(offline, chord.freqs, t + chord.dur * 0.5, chord.dur * 0.5, chordVol * 0.6);
       t += chord.dur;
     });
 
@@ -138,123 +146,129 @@ var AudioManager = (function() {
   }
 
   // ── Loops de la pantalla de inicio (idle) ────────────────────────────
-  // Colchón de acordes + melodía de violín pausada y atmosférica, como
-  // quien espera en la entrada de un paraje antes de aventurarse.
-  // Piezas de 20s, rotan mientras esté en idle.
+  // Bordón grave + quintas abiertas + melodía en modo dórico, pausada y
+  // contemplativa — un caballero descansando antes de partir a la
+  // aventura. Piezas de 20s, rotan mientras esté en idle.
 
   function buildMenuLoops() {
     menuLoops = [
-      renderMelodyPiece( // La menor
-        [ { freqs: [220.00, 261.63, 329.63], dur: 5 },
-          { freqs: [174.61, 220.00, 261.63], dur: 5 },
-          { freqs: [196.00, 246.94, 329.63], dur: 5 },
-          { freqs: [220.00, 261.63, 329.63], dur: 5 } ],
-        [ { f: 440.00, d: 1.4 }, { f: 523.25, d: 0.9 }, { f: 440.00, d: 1.1 }, { f: 0, d: 0.6 },
-          { f: 392.00, d: 1.1 }, { f: 440.00, d: 1.1 }, { f: 329.63, d: 1.7 }, { f: 0, d: 0.6 },
-          { f: 349.23, d: 1.1 }, { f: 392.00, d: 0.9 }, { f: 440.00, d: 1.3 }, { f: 0, d: 0.6 },
-          { f: 329.63, d: 1.1 }, { f: 293.66, d: 1.1 }, { f: 220.00, d: 2.4 } ],
-        0.10, 0.11
+      renderMelodyPiece( // La dórico (A B C D E F# G)
+        [ { freqs: [220.00, 329.63], dur: 5 },  // A3+E4 (quinta)
+          { freqs: [146.83, 220.00], dur: 5 },  // D3+A3
+          { freqs: [196.00, 293.66], dur: 5 },  // G3+D4
+          { freqs: [220.00, 329.63], dur: 5 } ],
+        [ { f: 0,      d: 0.6 },
+          { f: 329.63, d: 1.3 }, { f: 293.66, d: 0.9 }, { f: 261.63, d: 1.1 }, { f: 0, d: 0.5 },
+          { f: 246.94, d: 1.0 }, { f: 261.63, d: 1.0 }, { f: 220.00, d: 1.7 }, { f: 0, d: 0.6 },
+          { f: 293.66, d: 1.0 }, { f: 261.63, d: 0.9 }, { f: 329.63, d: 0.5 }, { f: 369.99, d: 0.6 },
+          { f: 329.63, d: 1.3 }, { f: 0, d: 0.6 },
+          { f: 261.63, d: 1.1 }, { f: 246.94, d: 1.1 }, { f: 220.00, d: 2.5 } ],
+        0.085, 0.10, [110.00, 164.81], 0.032
       ),
-      renderMelodyPiece( // Mi menor
-        [ { freqs: [164.81, 196.00, 246.94], dur: 5 },
-          { freqs: [130.81, 164.81, 196.00], dur: 5 },
-          { freqs: [146.83, 185.00, 246.94], dur: 5 },
-          { freqs: [164.81, 196.00, 246.94], dur: 5 } ],
-        [ { f: 329.63, d: 1.3 }, { f: 392.00, d: 1.0 }, { f: 329.63, d: 1.0 }, { f: 0, d: 0.5 },
-          { f: 293.66, d: 1.0 }, { f: 329.63, d: 1.0 }, { f: 246.94, d: 1.6 }, { f: 0, d: 0.6 },
-          { f: 261.63, d: 1.0 }, { f: 293.66, d: 0.9 }, { f: 329.63, d: 1.3 }, { f: 0, d: 0.6 },
-          { f: 246.94, d: 1.1 }, { f: 220.00, d: 1.1 }, { f: 164.81, d: 2.6 } ],
-        0.10, 0.105
+      renderMelodyPiece( // Mi dórico (E F# G A B C# D)
+        [ { freqs: [164.81, 246.94], dur: 5 },  // E3+B3
+          { freqs: [110.00, 164.81], dur: 5 },  // A2+E3
+          { freqs: [146.83, 220.00], dur: 5 },  // D3+A3
+          { freqs: [164.81, 246.94], dur: 5 } ],
+        [ { f: 0,      d: 0.5 },
+          { f: 246.94, d: 1.2 }, { f: 220.00, d: 0.9 }, { f: 196.00, d: 1.1 }, { f: 0, d: 0.5 },
+          { f: 184.99, d: 1.0 }, { f: 196.00, d: 1.0 }, { f: 164.81, d: 1.7 }, { f: 0, d: 0.6 },
+          { f: 220.00, d: 1.0 }, { f: 196.00, d: 0.9 }, { f: 246.94, d: 0.5 }, { f: 277.18, d: 0.6 },
+          { f: 246.94, d: 1.2 }, { f: 0, d: 0.6 },
+          { f: 196.00, d: 1.1 }, { f: 184.99, d: 1.1 }, { f: 164.81, d: 2.5 } ],
+        0.085, 0.10, [82.41, 123.47], 0.032
       ),
-      renderMelodyPiece( // Re menor
-        [ { freqs: [146.83, 174.61, 220.00], dur: 5 },
-          { freqs: [130.81, 174.61, 220.00], dur: 5 },
-          { freqs: [174.61, 220.00, 261.63], dur: 5 },
-          { freqs: [146.83, 174.61, 220.00], dur: 5 } ],
-        [ { f: 293.66, d: 1.3 }, { f: 349.23, d: 0.9 }, { f: 293.66, d: 1.1 }, { f: 0, d: 0.6 },
-          { f: 261.63, d: 1.1 }, { f: 293.66, d: 1.1 }, { f: 220.00, d: 1.7 }, { f: 0, d: 0.6 },
-          { f: 246.94, d: 1.0 }, { f: 261.63, d: 0.9 }, { f: 293.66, d: 1.3 }, { f: 0, d: 0.6 },
-          { f: 220.00, d: 1.1 }, { f: 196.00, d: 1.1 }, { f: 146.83, d: 2.4 } ],
-        0.095, 0.10
+      renderMelodyPiece( // Re dórico (D E F G A B C)
+        [ { freqs: [146.83, 220.00], dur: 5 },  // D3+A3
+          { freqs: [98.00, 146.83], dur: 5 },   // G2+D3
+          { freqs: [130.81, 196.00], dur: 5 },  // C3+G3
+          { freqs: [146.83, 220.00], dur: 5 } ],
+        [ { f: 0,      d: 0.6 },
+          { f: 220.00, d: 1.3 }, { f: 196.00, d: 0.9 }, { f: 174.61, d: 1.1 }, { f: 0, d: 0.5 },
+          { f: 164.81, d: 1.0 }, { f: 174.61, d: 1.0 }, { f: 146.83, d: 1.7 }, { f: 0, d: 0.6 },
+          { f: 196.00, d: 1.0 }, { f: 174.61, d: 0.9 }, { f: 220.00, d: 0.5 }, { f: 246.94, d: 0.6 },
+          { f: 220.00, d: 1.3 }, { f: 0, d: 0.6 },
+          { f: 174.61, d: 1.1 }, { f: 164.81, d: 1.1 }, { f: 146.83, d: 2.4 } ],
+        0.08, 0.095, [73.42, 110.00], 0.03
       )
     ];
   }
 
   // ── Loops de fondo durante la partida (running) ──────────────────────
-  // Mismo lenguaje (guitarra + violín) pero con la melodía más activa y
-  // los acordes cambiando más seguido, como avanzando por el paraje.
-  // Piezas de 20s, rotan durante la partida.
+  // Mismo lenguaje modal (bordón + quintas + violín dórico) pero con la
+  // melodía más activa, como avanzando por el paraje. Piezas de 20s,
+  // rotan durante la partida.
 
   function buildGameLoops() {
     gameLoops = [
-      renderMelodyPiece( // La menor
-        [ { freqs: [220.00, 261.63, 329.63], dur: 2.5 },
-          { freqs: [174.61, 220.00, 261.63], dur: 2.5 },
-          { freqs: [196.00, 246.94, 329.63], dur: 2.5 },
-          { freqs: [220.00, 261.63, 329.63], dur: 2.5 },
-          { freqs: [261.63, 329.63, 392.00], dur: 2.5 },
-          { freqs: [220.00, 261.63, 329.63], dur: 2.5 },
-          { freqs: [196.00, 246.94, 329.63], dur: 2.5 },
-          { freqs: [220.00, 261.63, 329.63], dur: 2.5 } ],
-        [ { f: 440.00, d: 0.45 }, { f: 523.25, d: 0.45 }, { f: 440.00, d: 0.35 }, { f: 392.00, d: 0.35 },
-          { f: 440.00, d: 0.55 }, { f: 0, d: 0.25 },
-          { f: 523.25, d: 0.45 }, { f: 587.33, d: 0.45 }, { f: 523.25, d: 0.35 }, { f: 440.00, d: 0.35 },
-          { f: 493.88, d: 0.55 }, { f: 0, d: 0.25 },
-          { f: 440.00, d: 0.45 }, { f: 392.00, d: 0.35 }, { f: 440.00, d: 0.35 }, { f: 523.25, d: 0.45 },
-          { f: 587.33, d: 0.65 }, { f: 0, d: 0.3 },
-          { f: 493.88, d: 0.4 }, { f: 440.00, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 329.63, d: 0.8 },
-          { f: 0, d: 0.3 },
-          { f: 440.00, d: 0.4 }, { f: 523.25, d: 0.4 }, { f: 659.25, d: 0.55 }, { f: 587.33, d: 0.4 },
-          { f: 523.25, d: 0.7 }, { f: 0, d: 0.3 },
-          { f: 440.00, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 349.23, d: 0.4 }, { f: 392.00, d: 0.4 },
-          { f: 440.00, d: 0.9 } ],
-        0.11, 0.10
-      ),
-      renderMelodyPiece( // Mi menor
-        [ { freqs: [164.81, 196.00, 246.94], dur: 2.5 },
-          { freqs: [130.81, 164.81, 196.00], dur: 2.5 },
-          { freqs: [146.83, 185.00, 246.94], dur: 2.5 },
-          { freqs: [164.81, 196.00, 246.94], dur: 2.5 },
-          { freqs: [196.00, 246.94, 293.66], dur: 2.5 },
-          { freqs: [164.81, 196.00, 246.94], dur: 2.5 },
-          { freqs: [146.83, 185.00, 246.94], dur: 2.5 },
-          { freqs: [164.81, 196.00, 246.94], dur: 2.5 } ],
-        [ { f: 329.63, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 329.63, d: 0.35 }, { f: 293.66, d: 0.35 },
+      renderMelodyPiece( // La dórico, más activo
+        [ { freqs: [220.00, 329.63], dur: 2.5 },
+          { freqs: [146.83, 220.00], dur: 2.5 },
+          { freqs: [196.00, 293.66], dur: 2.5 },
+          { freqs: [220.00, 329.63], dur: 2.5 },
+          { freqs: [261.63, 392.00], dur: 2.5 },
+          { freqs: [220.00, 329.63], dur: 2.5 },
+          { freqs: [196.00, 293.66], dur: 2.5 },
+          { freqs: [220.00, 329.63], dur: 2.5 } ],
+        [ { f: 329.63, d: 0.45 }, { f: 369.99, d: 0.4 }, { f: 329.63, d: 0.35 }, { f: 293.66, d: 0.35 },
           { f: 329.63, d: 0.55 }, { f: 0, d: 0.25 },
-          { f: 392.00, d: 0.4 }, { f: 440.00, d: 0.4 }, { f: 392.00, d: 0.35 }, { f: 329.63, d: 0.35 },
+          { f: 392.00, d: 0.45 }, { f: 440.00, d: 0.4 }, { f: 392.00, d: 0.35 }, { f: 329.63, d: 0.35 },
           { f: 369.99, d: 0.55 }, { f: 0, d: 0.25 },
           { f: 329.63, d: 0.4 }, { f: 293.66, d: 0.35 }, { f: 329.63, d: 0.35 }, { f: 392.00, d: 0.4 },
           { f: 440.00, d: 0.65 }, { f: 0, d: 0.3 },
-          { f: 369.99, d: 0.4 }, { f: 329.63, d: 0.4 }, { f: 293.66, d: 0.4 }, { f: 246.94, d: 0.8 },
+          { f: 369.99, d: 0.4 }, { f: 329.63, d: 0.4 }, { f: 293.66, d: 0.4 }, { f: 261.63, d: 0.8 },
           { f: 0, d: 0.3 },
           { f: 329.63, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 493.88, d: 0.5 }, { f: 440.00, d: 0.4 },
           { f: 392.00, d: 0.7 }, { f: 0, d: 0.3 },
           { f: 329.63, d: 0.4 }, { f: 293.66, d: 0.4 }, { f: 261.63, d: 0.4 }, { f: 293.66, d: 0.4 },
           { f: 329.63, d: 0.9 } ],
-        0.11, 0.095
+        0.095, 0.095, [110.00, 164.81], 0.03
       ),
-      renderMelodyPiece( // Re menor
-        [ { freqs: [146.83, 174.61, 220.00], dur: 2.5 },
-          { freqs: [130.81, 174.61, 220.00], dur: 2.5 },
-          { freqs: [174.61, 220.00, 261.63], dur: 2.5 },
-          { freqs: [146.83, 174.61, 220.00], dur: 2.5 },
-          { freqs: [164.81, 220.00, 261.63], dur: 2.5 },
-          { freqs: [146.83, 174.61, 220.00], dur: 2.5 },
-          { freqs: [174.61, 220.00, 261.63], dur: 2.5 },
-          { freqs: [146.83, 174.61, 220.00], dur: 2.5 } ],
-        [ { f: 293.66, d: 0.4 }, { f: 349.23, d: 0.4 }, { f: 293.66, d: 0.35 }, { f: 261.63, d: 0.35 },
-          { f: 293.66, d: 0.55 }, { f: 0, d: 0.25 },
-          { f: 349.23, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 349.23, d: 0.35 }, { f: 293.66, d: 0.35 },
-          { f: 329.63, d: 0.55 }, { f: 0, d: 0.25 },
-          { f: 293.66, d: 0.4 }, { f: 261.63, d: 0.35 }, { f: 293.66, d: 0.35 }, { f: 349.23, d: 0.4 },
-          { f: 392.00, d: 0.65 }, { f: 0, d: 0.3 },
-          { f: 329.63, d: 0.4 }, { f: 293.66, d: 0.4 }, { f: 261.63, d: 0.4 }, { f: 220.00, d: 0.8 },
+      renderMelodyPiece( // Mi dórico, más activo
+        [ { freqs: [164.81, 246.94], dur: 2.5 },
+          { freqs: [110.00, 164.81], dur: 2.5 },
+          { freqs: [146.83, 220.00], dur: 2.5 },
+          { freqs: [164.81, 246.94], dur: 2.5 },
+          { freqs: [196.00, 293.66], dur: 2.5 },
+          { freqs: [164.81, 246.94], dur: 2.5 },
+          { freqs: [146.83, 220.00], dur: 2.5 },
+          { freqs: [164.81, 246.94], dur: 2.5 } ],
+        [ { f: 246.94, d: 0.4 }, { f: 277.18, d: 0.4 }, { f: 246.94, d: 0.35 }, { f: 220.00, d: 0.35 },
+          { f: 246.94, d: 0.55 }, { f: 0, d: 0.25 },
+          { f: 293.66, d: 0.4 }, { f: 329.63, d: 0.4 }, { f: 293.66, d: 0.35 }, { f: 246.94, d: 0.35 },
+          { f: 277.18, d: 0.55 }, { f: 0, d: 0.25 },
+          { f: 246.94, d: 0.4 }, { f: 220.00, d: 0.35 }, { f: 246.94, d: 0.35 }, { f: 293.66, d: 0.4 },
+          { f: 329.63, d: 0.65 }, { f: 0, d: 0.3 },
+          { f: 277.18, d: 0.4 }, { f: 246.94, d: 0.4 }, { f: 220.00, d: 0.4 }, { f: 196.00, d: 0.8 },
           { f: 0, d: 0.3 },
-          { f: 293.66, d: 0.4 }, { f: 349.23, d: 0.4 }, { f: 440.00, d: 0.5 }, { f: 392.00, d: 0.4 },
-          { f: 349.23, d: 0.7 }, { f: 0, d: 0.3 },
-          { f: 293.66, d: 0.4 }, { f: 261.63, d: 0.4 }, { f: 233.08, d: 0.4 }, { f: 261.63, d: 0.4 },
-          { f: 293.66, d: 0.9 } ],
-        0.105, 0.095
+          { f: 246.94, d: 0.4 }, { f: 293.66, d: 0.4 }, { f: 369.99, d: 0.5 }, { f: 329.63, d: 0.4 },
+          { f: 293.66, d: 0.7 }, { f: 0, d: 0.3 },
+          { f: 246.94, d: 0.4 }, { f: 220.00, d: 0.4 }, { f: 196.00, d: 0.4 }, { f: 220.00, d: 0.4 },
+          { f: 246.94, d: 0.9 } ],
+        0.095, 0.09, [82.41, 123.47], 0.03
+      ),
+      renderMelodyPiece( // Re dórico, más activo
+        [ { freqs: [146.83, 220.00], dur: 2.5 },
+          { freqs: [98.00, 146.83], dur: 2.5 },
+          { freqs: [130.81, 196.00], dur: 2.5 },
+          { freqs: [146.83, 220.00], dur: 2.5 },
+          { freqs: [174.61, 261.63], dur: 2.5 },
+          { freqs: [146.83, 220.00], dur: 2.5 },
+          { freqs: [130.81, 196.00], dur: 2.5 },
+          { freqs: [146.83, 220.00], dur: 2.5 } ],
+        [ { f: 220.00, d: 0.4 }, { f: 246.94, d: 0.4 }, { f: 220.00, d: 0.35 }, { f: 196.00, d: 0.35 },
+          { f: 220.00, d: 0.55 }, { f: 0, d: 0.25 },
+          { f: 261.63, d: 0.4 }, { f: 293.66, d: 0.4 }, { f: 261.63, d: 0.35 }, { f: 220.00, d: 0.35 },
+          { f: 246.94, d: 0.55 }, { f: 0, d: 0.25 },
+          { f: 220.00, d: 0.4 }, { f: 196.00, d: 0.35 }, { f: 220.00, d: 0.35 }, { f: 261.63, d: 0.4 },
+          { f: 293.66, d: 0.65 }, { f: 0, d: 0.3 },
+          { f: 246.94, d: 0.4 }, { f: 220.00, d: 0.4 }, { f: 196.00, d: 0.4 }, { f: 174.61, d: 0.8 },
+          { f: 0, d: 0.3 },
+          { f: 220.00, d: 0.4 }, { f: 261.63, d: 0.4 }, { f: 329.63, d: 0.5 }, { f: 293.66, d: 0.4 },
+          { f: 261.63, d: 0.7 }, { f: 0, d: 0.3 },
+          { f: 220.00, d: 0.4 }, { f: 196.00, d: 0.4 }, { f: 174.61, d: 0.4 }, { f: 196.00, d: 0.4 },
+          { f: 220.00, d: 0.9 } ],
+        0.09, 0.09, [73.42, 110.00], 0.028
       )
     ];
   }
@@ -371,6 +385,5 @@ var AudioManager = (function() {
     playGameOver: playGameOver
   };
 })();
-
 
 
