@@ -1,6 +1,6 @@
 {
-  "name": "Snake",
-  "short_name": "Snake",
+  "name": "Worm",
+  "short_name": "Worm",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
