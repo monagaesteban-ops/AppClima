@@ -1,18 +1,19 @@
 // service-worker.js — cachea todo el juego para que funcione sin conexión.
 // Sube la versión (CACHE_NAME) cuando cambies los archivos del juego,
 // así el navegador descarga la nueva versión en vez de servir la vieja.
-var CACHE_NAME = 'snake-cache-v10';
+var CACHE_NAME = 'snake-cache-v15';
 
 var FILES_TO_CACHE = [
   './',
   './index.html',
   './style.css',
+  './skins.js',
   './render.js',
   './audio.js',
   './input.js',
   './game.js',
   './manifest.json',
-  './icon.svg'
+  './icon.png'
 ];
 
 // Al instalar: descarga y guarda todos los archivos del juego.

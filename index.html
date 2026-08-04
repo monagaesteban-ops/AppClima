@@ -6,11 +6,13 @@
   <title>Snake</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <meta name="theme-color" content="#9a9c4e">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="theme-color" content="#0a1f18">
 </head>
 <body>
   <canvas id="canvas"></canvas>
+  <script src="skins.js"></script><!-- catálogo de apariencias + desbloqueo/persistencia -->
   <script src="render.js"></script><!-- defines canvas, ctx, draw() -->
   <script src="audio.js"></script><!-- sonidos generados + vibraciones, sin dependencias externas -->
   <script src="input.js"></script><!-- attaches keyboard + touch listeners -->

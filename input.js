@@ -28,6 +28,12 @@ document.addEventListener('keydown', function(e) {
 
   if (!audioUnlocked) { unlockAudio(); return; }
 
+  if (uiMode === 'skins') {
+    if (action === 'left')  skinsMenuIndex = (skinsMenuIndex - 1 + SKINS.length) % SKINS.length;
+    if (action === 'right') skinsMenuIndex = (skinsMenuIndex + 1) % SKINS.length;
+    return;
+  }
+
   if (phase !== 'running') { start(); return; }
 
   if (action === 'left'  && dir.x === 0) nextDir = { x: -1, y:  0 };
@@ -35,6 +41,53 @@ document.addEventListener('keydown', function(e) {
   if (action === 'up'    && dir.y === 0) nextDir = { x:  0, y: -1 };
   if (action === 'down'  && dir.y === 0) nextDir = { x:  0, y:  1 };
 });
+
+// ── Skins: botón y menú ──────────────────────────────────────────────────
+// canvas puede tener un tamaño CSS distinto al de su buffer interno (width/
+// height), así que convertimos coordenadas de cliente a coordenadas de canvas.
+
+function canvasPoint(clientX, clientY) {
+  var rect = canvas.getBoundingClientRect();
+  var scaleX = canvas.width / rect.width;
+  var scaleY = canvas.height / rect.height;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+
+function pointInRect(p, r) {
+  return r && p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+}
+
+// Devuelve true si el toque fue consumido por la UI de skins (botón o menú),
+// en cuyo caso el input normal del juego (swipe / start) no debe aplicarse.
+function handleSkinsTap(clientX, clientY) {
+  var p = canvasPoint(clientX, clientY);
+
+  if (uiMode === 'skins') {
+    if (pointInRect(p, skinsMenuRects.close)) { uiMode = 'game'; return true; }
+    if (pointInRect(p, skinsMenuRects.select)) {
+      SkinManager.select(SKINS[skinsMenuIndex].id);
+      return true;
+    }
+    if (pointInRect(p, skinsMenuRects.prev)) {
+      skinsMenuIndex = (skinsMenuIndex - 1 + SKINS.length) % SKINS.length;
+      return true;
+    }
+    if (pointInRect(p, skinsMenuRects.next)) {
+      skinsMenuIndex = (skinsMenuIndex + 1) % SKINS.length;
+      return true;
+    }
+    return true; // dentro del menú, cualquier otro toque no debe filtrarse al juego
+  }
+
+  if (phase !== 'running' && pointInRect(p, skinsButtonRect)) {
+    skinsMenuIndex = SKINS.findIndex(function(s) { return s.id === SkinManager.getActive().id; });
+    if (skinsMenuIndex < 0) skinsMenuIndex = 0;
+    uiMode = 'skins';
+    return true;
+  }
+
+  return false;
+}
 
 // ── Touch / swipe ─────────────────────────────────────────────────────────
 
@@ -53,9 +106,12 @@ canvas.addEventListener('touchend', function(e) {
   var t  = e.changedTouches[0];
   var dx = t.clientX - touchStart.x;
   var dy = t.clientY - touchStart.y;
+  var start0 = touchStart;
   touchStart = null;
 
   if (!audioUnlocked) { unlockAudio(); return; }
+
+  if (handleSkinsTap(t.clientX, t.clientY)) return;
 
   if (phase !== 'running') { start(); return; }
 
@@ -70,3 +126,11 @@ canvas.addEventListener('touchend', function(e) {
     if (dy < 0 && dir.y === 0) nextDir = { x: 0, y: -1 };
   }
 }, { passive: false });
+
+// ── Clic de mouse (para pruebas de escritorio) ──────────────────────────────
+
+canvas.addEventListener('click', function(e) {
+  if (!audioUnlocked) { unlockAudio(); return; }
+  if (handleSkinsTap(e.clientX, e.clientY)) return;
+  if (phase !== 'running') { start(); return; }
+});
