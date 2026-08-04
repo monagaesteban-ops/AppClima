@@ -424,6 +424,3 @@ var AudioManager = (function() {
     setIntensity: setIntensity
   };
 })();
-
-
-
